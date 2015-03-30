@@ -1,3 +1,6 @@
 #!/usr/bin/env ruby
 
 require "preserve-rds-snapshot"
+require "preserve-rds-snapshot/cli"
+
+PreserveRdsSnapshot::CLI.start
