@@ -10,6 +10,8 @@ Amazon RDS create a snapshot automatically. Snapshot that is created automatical
   * copy_db_snapshot
   * delete_db_snapshots
   * list_tags_for_resources
+  * add_tags_to_resources
+  * remove_tags_from_resources
 * EC2
   * describe_security_groups
 
