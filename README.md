@@ -22,9 +22,11 @@ Or install it yourself as:
 
 ```
 Commands:
-  preserve-rds-snapshot help [COMMAND]                                                                               ...
-  preserve-rds-snapshot list                                                                                         ...
-  preserve-rds-snapshot preserve o, --source-db-snapshot-identifier=SOURCE_DB_SNAPSHOT_IDENTIFIER t, --target-db-snap...
+  preserve-rds-snapshot copy -o src -t target  # copy snapshot
+  preserve-rds-snapshot help [COMMAND]         # Describe available commands or one specific command
+  preserve-rds-snapshot latest                 # show latest snapshot
+  preserve-rds-snapshot list                   # Show list of RDS Snapshots
+  preserve-rds-snapshot preserve               # copy automated snapshot to manual
 
 Options:
   p, [--profile=PROFILE]                                   # Load credentials by profile name from shared credentials file.
@@ -32,6 +34,15 @@ Options:
   s, [--secret-access-key=SECRET_ACCESS_KEY]               # AWS secret access key.
   r, [--region=REGION]                                     # AWS region.
       [--shared-credentials-path=SHARED_CREDENTIALS_PATH]  # AWS shared credentials path.
+  i, [--instance=INSTANCE]                                 # target DB Instance
+
+Options:
+  p, [--profile=PROFILE]                                   # Load credentials by profile name from shared credentials file.
+  k, [--access-key-id=ACCESS_KEY_ID]                       # AWS access key id.
+  s, [--secret-access-key=SECRET_ACCESS_KEY]               # AWS secret access key.
+  r, [--region=REGION]                                     # AWS region.
+      [--shared-credentials-path=SHARED_CREDENTIALS_PATH]  # AWS shared credentials path.
+  i, [--instance=INSTANCE]                                 # target DB Instance
  ```
 
 ## Development
