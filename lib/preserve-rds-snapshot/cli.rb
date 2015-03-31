@@ -79,13 +79,19 @@ module PreserveRdsSnapshot
     option :target_db_snapshot_identifier,
       aliases: [:t],
       type: :string,
-      desc: 'target snapshot identifier',
-      required: true
+      desc: 'target snapshot identifier'
     def copy
+      if options[:target_db_snapshot_identifier]
+        target = options[:target_db_snapshot_identifier]
+      else
+        target = preserve_snapshot_name(options[:source_db_snapshot_identifier])
+      end
+      source = options[:source_db_snapshot_identifier]
+
       begin
         resp = rds.client.copy_db_snapshot(
-          source_db_snapshot_identifier: options[:source_db_snapshot_identifier],
-          target_db_snapshot_identifier: options[:target_db_snapshot_identifier],
+          source_db_snapshot_identifier: source,
+          target_db_snapshot_identifier: target,
           tags: [key: PRESERVE_TAG_NAME, value: 'true']
         )
         s = resp.db_snapshot
