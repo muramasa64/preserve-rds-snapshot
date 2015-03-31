@@ -37,6 +37,29 @@ module PreserveRdsSnapshot
       end
     end
 
+    desc :init, "initialize instance"
+    option :generations,
+      aliases: [:g],
+      type: :numeric,
+      desc: "preserved snapshot generations",
+      default: 10
+    def init
+      begin
+        rds.db_instances.each do |instance|
+          if options[:dry_run]
+            puts "init(dry run)\t#{instance.db_instance_identifier}\t#{options[:generations]}"
+          else
+            if enable_preserve(instance.db_instance_identifier, options[:generations])
+              puts "init\t#{instance.db_instance_identifier}\t#{options[:generations]}"
+            end
+          end
+        end
+        fix_tags
+      rescue ::Aws::Errors::ServiceError => e
+        $stderr.puts e
+      end
+    end
+
     desc :preserve, 'copy automated snapshot to manual'
     def preserve
       begin
@@ -173,6 +196,49 @@ module PreserveRdsSnapshot
         $stderr.puts e
       end
       tag
+    end
+
+    def enable_preserve(resource_id, generations)
+      return false unless generations.kind_of? Integer
+      begin
+        tag = preserve_tag(resource_id, 'db')
+        unless tag
+          resp = rds.client.add_tags_to_resource(
+            resource_name: rds_arn(resource_id, 'db'),
+            tags: [{key: PRESERVE_TAG_NAME, value: generations.to_s}]
+          )
+          return resp.successful?
+        end
+      rescue ::Aws::Errors::ServiceError => e
+        $stderr.puts e
+      end
+    end
+
+    # fix v0.2.0 format tag to latest
+    def fix_tags
+      begin
+        rds.client.describe_db_snapshots(
+          snapshot_type: 'manual'
+        ).db_snapshots.each do |s|
+          arn = rds_arn(s.db_snapshot_identifier, 'snapshot')
+          resp = rds.client.list_tags_for_resource(
+            resource_name: arn
+          )
+          tag = resp.tag_list.find {|t| t[:key] == 'type' && t[:value] == 'preserve'}
+          if tag
+            rds.client.add_tags_to_resource(
+              resource_name: arn,
+              tags: [{key: PRESERVE_TAG_NAME, value: 'true'}]
+            )
+            rds.client.remove_tags_from_resource(
+              resource_name: arn,
+              tag_keys: ['type']
+            )
+          end
+        end
+      rescue ::Aws::Errors::ServiceError => e
+        $stderr.puts e
+      end
     end
 
     def copy_snapshot(db_snapshot_identifier)
