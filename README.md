@@ -2,6 +2,19 @@
 
 Amazon RDS create a snapshot automatically. Snapshot that is created automatically, will be lost when the instance is terminated. This script preserve db snapshots by copy snapshots.
 
+### AWS API requirement
+
+* RDS
+  * describe_db_instances
+  * describe_db_snapshots
+  * copy_db_snapshot
+  * delete_db_snapshots
+  * list_tags_for_resources
+* EC2
+  * describe_security_groups
+
+NOTE: describe_security_groups is required to get the AWS Account Number. You can use the '--aws-account-number' option instead.
+
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -44,6 +57,7 @@ Options:
       [--shared-credentials-path=SHARED_CREDENTIALS_PATH]  # AWS shared credentials path.
   i, [--instance=INSTANCE]                                 # target DB Instance
  ```
+
 
 ## Development
 
