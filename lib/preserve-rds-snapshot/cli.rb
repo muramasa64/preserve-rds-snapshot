@@ -4,11 +4,16 @@ require 'thor/aws'
 module PreserveRdsSnapshot
   class CLI < Thor
     include Thor::Aws
+    PRESERVE_TAG_NAME = 'preserve-rds-snapshot'
 
     class_option :instance,
       aliases: [:i],
       type: :string,
       desc: 'target DB Instance'
+    class_option :aws_account_number,
+      aliases: [:n],
+      type: :string,
+      desc: 'AWS Account Number (ex: 012345678901)'
 
     desc :list, 'Show list of RDS Snapshots'
     option :snapshot_type,
@@ -43,7 +48,7 @@ module PreserveRdsSnapshot
               tags: [key: 'type', value: 'preserve']
             )
             s = resp.db_snapshot
-            puts "#{s.db_snapshot_identifier}\t#{s.snapshot_create_time}"
+            puts "#{latest.db_snapshot_identifier}\t#{s.db_snapshot_identifier}\t#{s.snapshot_create_time}"
           end
         end
       rescue ::Aws::Errors::ServiceError => e
@@ -107,15 +112,47 @@ module PreserveRdsSnapshot
         if db_instance_identifier
           list << rds.db_instance(db_instance_identifier)
         else
-          list = rds.db_instances.to_a
+          rds.db_instances.each do |i|
+            list << i if preserve_tag(i.db_instance_identifier)
+          end
         end
       rescue ::Aws::Errors::ServiceError => e
         $stderr.puts e
       end
+      list
     end
 
     def preserve_snapshot_name(db_snapshot_identifier)
       'preserve-' + db_snapshot_identifier.gsub(/^rds:/, '')
+    end
+
+    def aws_account_number
+      if options[:aws_account_number]
+        return options[:aws_account_number]
+      else
+        begin
+          return ec2.security_groups(group_names: ['default']).first.owner_id
+        rescue ::Aws::Errors::ServiceError => e
+          $stderr.puts e
+        end
+      end
+    end
+
+    def rds_arn(db_instance_identifier)
+      "arn:aws:rds:#{options[:region]}:#{aws_account_number}:db:#{db_instance_identifier}"
+    end
+
+    def preserve_tag(db_instance_identifier)
+      tag = nil
+      begin
+        resp = rds.client.list_tags_for_resource(
+          resource_name: rds_arn(db_instance_identifier)
+        )
+        tag = resp.tag_list.find {|t| t[:key] == PRESERVE_TAG_NAME}
+      rescue ::Aws::Errors::ServiceError => e
+        $stderr.puts e
+      end
+      tag
     end
   end
 end
