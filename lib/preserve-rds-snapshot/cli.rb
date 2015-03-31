@@ -42,14 +42,27 @@ module PreserveRdsSnapshot
       begin
         instances = db_instances(options[:instance])
         instances.each do |i|
-          latest = latest_auto_snapshot(i.db_instance_identifier)
+          instance = i.db_instance_identifier
+          latest = latest_auto_snapshot(instance)
           if latest
             if options[:dry_run]
               puts "#{latest.db_snapshot_identifier}\t-\t-"
             else
               s = copy_snapshot(latest.db_snapshot_identifier)
-              puts "#{latest.db_snapshot_identifier}\t#{s.db_snapshot_identifier}\t#{s.snapshot_create_time}"
+              puts "copy\t#{latest.db_snapshot_identifier}\t#{s.db_snapshot_identifier}\t#{s.snapshot_create_time}" if s
             end
+          end
+
+          tag = preserve_tag(instance, 'db')
+          expireds = expired_snapshots(instance, tag[:value].to_i)
+          dry_run_msg = '(dry run)' if options[:dry_run]
+          expireds.each do |expired|
+            unless options[:dry_run]
+              rds.client.delete_db_snapshot(
+                db_snapshot_identifier: expired.db_snapshot_identifier
+              )
+            end
+            puts "delete#{dry_run_msg}\t#{expired.db_snapshot_identifier}"
           end
         end
       rescue ::Aws::Errors::ServiceError => e
@@ -114,7 +127,7 @@ module PreserveRdsSnapshot
           list << rds.db_instance(db_instance_identifier)
         else
           rds.db_instances.each do |i|
-            list << i if preserve_tag(i.db_instance_identifier)
+            list << i if preserve_tag(i.db_instance_identifier, 'db')
           end
         end
       rescue ::Aws::Errors::ServiceError => e
@@ -139,15 +152,15 @@ module PreserveRdsSnapshot
       end
     end
 
-    def rds_arn(db_instance_identifier)
-      "arn:aws:rds:#{options[:region]}:#{aws_account_number}:db:#{db_instance_identifier}"
+    def rds_arn(resource_id, type)
+      "arn:aws:rds:#{options[:region]}:#{aws_account_number}:#{type}:#{resource_id}"
     end
 
-    def preserve_tag(db_instance_identifier)
+    def preserve_tag(resource_id, type)
       tag = nil
       begin
         resp = rds.client.list_tags_for_resource(
-          resource_name: rds_arn(db_instance_identifier)
+          resource_name: rds_arn(resource_id, type)
         )
         tag = resp.tag_list.find {|t| t[:key] == PRESERVE_TAG_NAME}
       rescue ::Aws::Errors::ServiceError => e
@@ -167,6 +180,23 @@ module PreserveRdsSnapshot
       rescue ::Aws::Errors::ServiceError => e
         $stderr.puts e
       end
+    end
+
+    def expired_snapshots(db_instance_identifier, generations)
+      expired_snapshots = []
+      begin
+        resp = rds.client.describe_db_snapshots(
+          snapshot_type: 'manual',
+          db_instance_identifier: db_instance_identifier
+        )
+        snapshots = resp.db_snapshots.select {|s|
+          preserve_tag(s.db_snapshot_identifier, 'snapshot')
+        }.sort_by(&:snapshot_create_time).reverse
+        expired_snapshots = snapshots[generations..-1] if snapshots.size > generations
+      rescue ::Aws::Errors::ServiceError => e
+        $stderr.puts e
+      end
+      expired_snapshots
     end
   end
 end
