@@ -22,5 +22,30 @@ module PreserveRdsSnapshot
         $stderr.puts e
       end
     end
+
+    desc :preserve, 'copy automated snapshot to manual'
+    option :source_db_snapshot_identifier,
+      aliases: [:o],
+      type: :string,
+      desc: 'source snapshot identifier',
+      required: true
+    option :target_db_snapshot_identifier,
+      aliases: [:t],
+      type: :string,
+      desc: 'target snapshot identifier',
+      required: true
+    def preserve
+      begin
+        resp = rds.client.copy_db_snapshot(
+          source_db_snapshot_identifier: options[:source_db_snapshot_identifier],
+          target_db_snapshot_identifier: options[:target_db_snapshot_identifier],
+          tags: [key: 'type', value: 'preserve']
+        )
+        s = resp.db_snapshot
+        puts "#{s.db_snapshot_identifier}\t#{s.snapshot_create_time}"
+      rescue ::Aws::Errors::ServiceError => e
+        $stderr.puts e
+      end
+    end
   end
 end
