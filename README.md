@@ -20,6 +20,7 @@ Or install it yourself as:
 
 ## Usage
 
+```
 Commands:
   preserve-rds-snapshot help [COMMAND]                                                                               ...
   preserve-rds-snapshot list                                                                                         ...
@@ -31,6 +32,7 @@ Options:
   s, [--secret-access-key=SECRET_ACCESS_KEY]               # AWS secret access key.
   r, [--region=REGION]                                     # AWS region.
       [--shared-credentials-path=SHARED_CREDENTIALS_PATH]  # AWS shared credentials path.
+ ```
 
 ## Development
 
