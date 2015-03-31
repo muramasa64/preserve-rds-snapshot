@@ -5,6 +5,11 @@ module PreserveRdsSnapshot
   class CLI < Thor
     include Thor::Aws
 
+    class_option :instance,
+      aliases: [:i],
+      type: :string,
+      desc: 'target DB Instance'
+
     desc :list, 'Show list of RDS Snapshots'
     option :snapshot_type,
       aliases: [:t],
@@ -13,7 +18,8 @@ module PreserveRdsSnapshot
     def list
       begin
         resp = rds.client.describe_db_snapshots(
-          snapshot_type: options[:snapshot_type]
+          snapshot_type: options[:snapshot_type],
+          db_instance_identifier: options[:instance]
         )
         resp.db_snapshots.each do |s|
           puts "#{s.db_snapshot_identifier}\t#{s.snapshot_create_time}"
@@ -50,20 +56,20 @@ module PreserveRdsSnapshot
 
     desc :latest, 'show latest snapshot'
     def latest
-      s = latest_auto_snapshot
+      s = latest_auto_snapshot(options[:instance])
       puts "#{s.db_snapshot_identifier}\t#{s.snapshot_create_time}" if s
     end
 
     private
 
-    def latest_auto_snapshot
+    def latest_auto_snapshot(db_instance_identifier = nil)
       latest = nil
       begin
         resp = rds.client.describe_db_snapshots(
-          snapshot_type: 'automated'
+          snapshot_type: 'automated',
+          db_instance_identifier: db_instance_identifier
         )
-        #resp.db_snapshots.sort_by &:snapshot_create_time
-        latest = resp.db_snapshots.sort_by {|s| s.snapshot_create_time}.last
+        latest = resp.db_snapshots.sort_by(&:snapshot_create_time).last
       rescue ::Aws::Errors::ServiceError => e
         $stderr.puts e
       end
