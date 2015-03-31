@@ -86,7 +86,7 @@ module PreserveRdsSnapshot
         resp = rds.client.copy_db_snapshot(
           source_db_snapshot_identifier: options[:source_db_snapshot_identifier],
           target_db_snapshot_identifier: options[:target_db_snapshot_identifier],
-          tags: [key: 'type', value: 'preserve']
+          tags: [key: PRESERVE_TAG_NAME, value: 'true']
         )
         s = resp.db_snapshot
         puts "#{s.db_snapshot_identifier}\t#{s.snapshot_create_time}"
@@ -174,7 +174,7 @@ module PreserveRdsSnapshot
         resp = rds.client.copy_db_snapshot(
           source_db_snapshot_identifier: db_snapshot_identifier,
           target_db_snapshot_identifier: preserve_snapshot_name(db_snapshot_identifier),
-          tags: [key: 'type', value: PRESERVE_TAG_NAME]
+          tags: [key: PRESERVE_TAG_NAME, value: 'true']
         )
         return resp.db_snapshot
       rescue ::Aws::Errors::ServiceError => e
