@@ -37,6 +37,7 @@ Or install it yourself as:
 Commands:
   preserve-rds-snapshot copy -o src -t target  # copy snapshot
   preserve-rds-snapshot help [COMMAND]         # Describe available commands or one specific command
+  preserve-rds-snapshot init                   # initialize instance
   preserve-rds-snapshot latest                 # show latest snapshot
   preserve-rds-snapshot list                   # Show list of RDS Snapshots
   preserve-rds-snapshot preserve               # copy automated snapshot to manual
@@ -48,16 +49,25 @@ Options:
   r, [--region=REGION]                                     # AWS region.
       [--shared-credentials-path=SHARED_CREDENTIALS_PATH]  # AWS shared credentials path.
   i, [--instance=INSTANCE]                                 # target DB Instance
-
-Options:
-  p, [--profile=PROFILE]                                   # Load credentials by profile name from shared credentials file.
-  k, [--access-key-id=ACCESS_KEY_ID]                       # AWS access key id.
-  s, [--secret-access-key=SECRET_ACCESS_KEY]               # AWS secret access key.
-  r, [--region=REGION]                                     # AWS region.
-      [--shared-credentials-path=SHARED_CREDENTIALS_PATH]  # AWS shared credentials path.
-  i, [--instance=INSTANCE]                                 # target DB Instance
+  n, [--aws-account-number=AWS_ACCOUNT_NUMBER]             # AWS Account Number (ex: 012345678901)
+      [--dry-run], [--no-dry-run]                          # show only, don't modify
  ```
 
+### initialize instance
+
+```
+$ preserve-rds-snapshot init
+```
+
+init subcommand add 'preserve-rds-snapshot' tag to RDS instance.
+
+### preserve snapshot
+
+```
+$ preserve-rds-snapshot preserve
+```
+
+preserve subcommand copy automated snapshot to manual snapshot.
 
 ## Development
 
