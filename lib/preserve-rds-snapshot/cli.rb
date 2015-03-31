@@ -14,6 +14,9 @@ module PreserveRdsSnapshot
       aliases: [:n],
       type: :string,
       desc: 'AWS Account Number (ex: 012345678901)'
+    class_option :dry_run,
+      type: :boolean,
+      desc: "show only, don't modify"
 
     desc :list, 'Show list of RDS Snapshots'
     option :snapshot_type,
@@ -41,6 +44,10 @@ module PreserveRdsSnapshot
         instances.each do |i|
           latest = latest_auto_snapshot(i.db_instance_identifier)
           if latest
+            if options[:dry_run]
+              puts "#{latest.db_snapshot_identifier}\t-\t-"
+              next
+            end
             db_snapshot_identifier = latest.db_snapshot_identifier
             resp = rds.client.copy_db_snapshot(
               source_db_snapshot_identifier: db_snapshot_identifier,
