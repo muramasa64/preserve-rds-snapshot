@@ -46,16 +46,10 @@ module PreserveRdsSnapshot
           if latest
             if options[:dry_run]
               puts "#{latest.db_snapshot_identifier}\t-\t-"
-              next
+            else
+              s = copy_snapshot(latest.db_snapshot_identifier)
+              puts "#{latest.db_snapshot_identifier}\t#{s.db_snapshot_identifier}\t#{s.snapshot_create_time}"
             end
-            db_snapshot_identifier = latest.db_snapshot_identifier
-            resp = rds.client.copy_db_snapshot(
-              source_db_snapshot_identifier: db_snapshot_identifier,
-              target_db_snapshot_identifier: preserve_snapshot_name(db_snapshot_identifier),
-              tags: [key: 'type', value: 'preserve']
-            )
-            s = resp.db_snapshot
-            puts "#{latest.db_snapshot_identifier}\t#{s.db_snapshot_identifier}\t#{s.snapshot_create_time}"
           end
         end
       rescue ::Aws::Errors::ServiceError => e
@@ -160,6 +154,19 @@ module PreserveRdsSnapshot
         $stderr.puts e
       end
       tag
+    end
+
+    def copy_snapshot(db_snapshot_identifier)
+      begin
+        resp = rds.client.copy_db_snapshot(
+          source_db_snapshot_identifier: db_snapshot_identifier,
+          target_db_snapshot_identifier: preserve_snapshot_name(db_snapshot_identifier),
+          tags: [key: 'type', value: PRESERVE_TAG_NAME]
+        )
+        return resp.db_snapshot
+      rescue ::Aws::Errors::ServiceError => e
+        $stderr.puts e
+      end
     end
   end
 end
