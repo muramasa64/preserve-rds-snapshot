@@ -47,5 +47,27 @@ module PreserveRdsSnapshot
         $stderr.puts e
       end
     end
+
+    desc :latest, 'show latest snapshot'
+    def latest
+      s = latest_auto_snapshot
+      puts "#{s.db_snapshot_identifier}\t#{s.snapshot_create_time}" if s
+    end
+
+    private
+
+    def latest_auto_snapshot
+      latest = nil
+      begin
+        resp = rds.client.describe_db_snapshots(
+          snapshot_type: 'automated'
+        )
+        #resp.db_snapshots.sort_by &:snapshot_create_time
+        latest = resp.db_snapshots.sort_by {|s| s.snapshot_create_time}.last
+      rescue ::Aws::Errors::ServiceError => e
+        $stderr.puts e
+      end
+      latest
+    end
   end
 end
