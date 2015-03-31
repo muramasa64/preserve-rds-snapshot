@@ -15,7 +15,7 @@ Amazon RDS create a snapshot automatically. Snapshot that is created automatical
 * EC2
   * describe_security_groups
 
-NOTE: describe_security_groups is required to get the AWS Account Number. You can use the '--aws-account-number' option instead.
+NOTE: describe_security_groups is required to get the AWS Account Number. You can use the `--aws-account-number` option instead.
 
 ## Installation
 
