@@ -34,6 +34,7 @@ module PreserveRdsSnapshot
         end
       rescue ::Aws::Errors::ServiceError => e
         $stderr.puts e
+        exit 1
       end
     end
 
@@ -57,6 +58,7 @@ module PreserveRdsSnapshot
         fix_tags
       rescue ::Aws::Errors::ServiceError => e
         $stderr.puts e
+        exit 1
       end
     end
 
@@ -90,6 +92,7 @@ module PreserveRdsSnapshot
         end
       rescue ::Aws::Errors::ServiceError => e
         $stderr.puts e
+        exit 1
       end
     end
 
@@ -121,6 +124,7 @@ module PreserveRdsSnapshot
         puts "#{s.db_snapshot_identifier}\t#{s.snapshot_create_time}"
       rescue ::Aws::Errors::ServiceError => e
         $stderr.puts e
+        exit 1
       end
     end
 
@@ -145,6 +149,7 @@ module PreserveRdsSnapshot
         latest = resp.db_snapshots.sort_by(&:snapshot_create_time).last
       rescue ::Aws::Errors::ServiceError => e
         $stderr.puts e
+        exit 1
       end
       latest
     end
@@ -161,6 +166,7 @@ module PreserveRdsSnapshot
         end
       rescue ::Aws::Errors::ServiceError => e
         $stderr.puts e
+        exit 1
       end
       list
     end
@@ -177,6 +183,7 @@ module PreserveRdsSnapshot
           return ec2.security_groups(group_names: ['default']).first.owner_id
         rescue ::Aws::Errors::ServiceError => e
           $stderr.puts e
+          exit 1
         end
       end
     end
@@ -194,6 +201,7 @@ module PreserveRdsSnapshot
         tag = resp.tag_list.find {|t| t[:key] == PRESERVE_TAG_NAME}
       rescue ::Aws::Errors::ServiceError => e
         $stderr.puts e
+        exit 1
       end
       tag
     end
@@ -211,6 +219,7 @@ module PreserveRdsSnapshot
         end
       rescue ::Aws::Errors::ServiceError => e
         $stderr.puts e
+        exit 1
       end
     end
 
@@ -238,6 +247,7 @@ module PreserveRdsSnapshot
         end
       rescue ::Aws::Errors::ServiceError => e
         $stderr.puts e
+        exit 1
       end
     end
 
@@ -251,6 +261,7 @@ module PreserveRdsSnapshot
         return resp.db_snapshot
       rescue ::Aws::Errors::ServiceError => e
         $stderr.puts e
+        exit 1
       end
     end
 
@@ -267,6 +278,7 @@ module PreserveRdsSnapshot
         expired_snapshots = snapshots[generations..-1] if snapshots.size > generations
       rescue ::Aws::Errors::ServiceError => e
         $stderr.puts e
+        exit 1
       end
       expired_snapshots
     end
